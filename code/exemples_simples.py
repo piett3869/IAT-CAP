@@ -7,8 +7,10 @@ class Graphe():
         self.a = []
 
         self.sommets_visites = []
-        self.frequences_attribuees = [1]*len(self.d)
+        self.frequences_attribuees = [0]*len(self.d)
 
+        self.ordre_parcours = []
+        self._dfs()
         self._calculer_liste_arretes()
     
     def __str__(self) -> str:
@@ -16,24 +18,48 @@ class Graphe():
         blank = '   '*len(self.d) + '  '
         for line in self.m:
             rep += blank + ' '.join(['%3s' % str(l) for l in line]) + '\n'
-        
         rep += ' '.join(['%3s' % str(d) for d in self.d])
-
         rep += '\n'
-
         rep += '\n'.join([f"({rown}, {coln}) : {v}" for rown, coln, v in self.a])
-
         return rep
 
     def _calculer_liste_arretes(self) -> None:
         for rown, arr in enumerate(np.triu(self.m)):
             for coln, val in enumerate(arr):
                 if coln > rown:
-                    print(f"({rown}, {coln}) : {val}")
                     if val > 0:
                         self.a.append((rown, coln, val))
 
-    def solution_gloutnne_naive(self) -> None:
+    def _dfs(self, node=0):
+        if node not in self.ordre_parcours:
+            self.ordre_parcours.append(node)
+            for n, v in enumerate(self.m[node]):
+                if v > 0:
+                    self._dfs(node=n)
+
+    def solution_gloutonne(self) -> list:
+        self.frequences_attribuees[0] = 1
+
+        for current_node in self.ordre_parcours[1:]:
+            print("Noeud %d" % current_node)
+
+            freq = 0
+            freq_min = 0
+
+            for n, val in enumerate(self.m[current_node]):
+                if val != 0 and self.frequences_attribuees[n] != 0:
+                    print("voisin %d (%d) - contrainte %d" % (n, self.frequences_attribuees[n], val))
+                    freq = max(freq, self.frequences_attribuees[n] + val)
+                    freq_min = max(freq_min, self.frequences_attribuees[n] - val)
+
+            self.frequences_attribuees[current_node] = freq if freq_min < 1 else 1
+
+            print("Attrribution de la fréquence : %d" % freq)
+        
+        return self.frequences_attribuees
+
+
+    def solution_gloutnne_naive(self) -> list:
         premier_sommet = self.a[0][0]
         self.sommets_visites.append(premier_sommet)
 
@@ -42,16 +68,12 @@ class Graphe():
             sommet_a, sommet_b, valeur = arrete
 
             if sommet_b in self.sommets_visites:
-                print("SAUTE")
+                print("Arrête déjà traitée. Vérification")
                 if abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b]) >= valeur:
-                    print("TOUT VA BIEN")
                     continue
-                else:
-                    print("TOUT NE VA PAS BIEN")
 
-
-            freq_inf = self.frequences_attribuees[sommet_b] = self.frequences_attribuees[sommet_a] - valeur
-            freq_sup = self.frequences_attribuees[sommet_b] = self.frequences_attribuees[sommet_a] + valeur
+            freq_inf = self.frequences_attribuees[sommet_a] - valeur
+            freq_sup = self.frequences_attribuees[sommet_a] + valeur
 
             self.frequences_attribuees[sommet_b] = 1 if freq_inf > 0 else freq_sup
 
@@ -59,6 +81,15 @@ class Graphe():
             print(f"Attribution de la fréquence {self.frequences_attribuees[sommet_a] + valeur} au sommet {sommet_b}")
 
         return self.frequences_attribuees
+
+    def test_solution_valide(self):
+        for sommet_a, sommet_b, valeur in self.a:
+            if abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b]) < valeur:
+                print("SOLUTION INVALIDE")
+                return
+        
+        print("SOLUTION VALIDE")
+
 
 
 
@@ -71,20 +102,21 @@ if __name__ == '__main__':
     ])
     s2 = np.array([1, 1, 1, 1])
     g2 = Graphe(m2, s2)
-    print(g2)
 
     #f = g2.glouton()
     #print(f)
 
     m3 = np.array([
-        [0, 2, 0, 0, 4],
-        [0, 0, 1, 0, 4],
-        [0, 0, 0, 3, 0],
-        [0, 0, 0, 0, 5],
-        [0, 0, 0, 0, 0]
+        [0, 2, 0, 0, 9],
+        [2, 0, 1, 0, 4],
+        [0, 1, 0, 3, 0],
+        [0, 0, 3, 0, 5],
+        [9, 4, 0, 5, 0]
     ])
     s3 = np.array([1, 1, 1, 1, 1])
 
     g3 = Graphe(m3, s3)
-    f2 = g3.solution_gloutnne_naive()
-    print(f2)
+
+    f3 = g3.solution_gloutonne()
+    print("Fréquences attribuées : ", f3)
+    g3.test_solution_valide()

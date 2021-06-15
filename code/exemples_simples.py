@@ -44,17 +44,21 @@ class Graphe():
             print("Noeud %d" % current_node)
 
             freq = 0
-            freq_min = 0
+            freq_min = []
 
             for n, val in enumerate(self.m[current_node]):
                 if val != 0 and self.frequences_attribuees[n] != 0:
                     print("voisin %d (%d) - contrainte %d" % (n, self.frequences_attribuees[n], val))
                     freq = max(freq, self.frequences_attribuees[n] + val)
-                    freq_min = max(freq_min, self.frequences_attribuees[n] - val)
+                    freq_min.append(self.frequences_attribuees[n] - val)
 
-            self.frequences_attribuees[current_node] = freq if freq_min < 1 else 1
+            if min(freq_min) > 0:
+                self.frequences_attribuees[current_node] = min(freq_min)
+                print("Attrribution de la fréquence MIN : %d" % min(freq_min))
+            else:
+                self.frequences_attribuees[current_node] = freq
+                print("Attrribution de la fréquence MAX : %d" % freq)
 
-            print("Attrribution de la fréquence : %d" % freq)
         
         return self.frequences_attribuees
 
@@ -85,7 +89,7 @@ class Graphe():
     def test_solution_valide(self):
         for sommet_a, sommet_b, valeur in self.a:
             if abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b]) < valeur:
-                print("SOLUTION INVALIDE")
+                print(f"SOLUTION INVALIDE : ({sommet_a}, {sommet_b}) devrait être au minimum {valeur} mais est {abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b])}")
                 return
         
         print("SOLUTION VALIDE")
@@ -117,6 +121,28 @@ if __name__ == '__main__':
 
     g3 = Graphe(m3, s3)
 
-    f3 = g3.solution_gloutonne()
-    print("Fréquences attribuées : ", f3)
-    g3.test_solution_valide()
+    #f3 = g3.solution_gloutonne()
+    #print("Fréquences attribuées : ", f3)
+    #g3.test_solution_valide()
+
+    m4 = np.array([
+        [0, 3, 0, 2, 0, 0, 0, 10],
+        [3, 0, 1, 2, 0, 0, 0, 0],
+        [0, 1, 0, 4, 0, 0, 0, 0],
+        [2, 2, 4, 0, 8, 4, 6, 5],
+        [0, 0, 0, 8, 0, 3, 0, 0],
+        [0, 0, 0, 4, 3, 0, 1, 0],
+        [0, 0, 0, 6, 0, 1, 0, 8],
+        [10, 0, 0, 5, 0, 0, 8, 0],
+    ])
+    s4 =np.array([1, 1, 1, 1, 1, 1, 1, 1])
+
+    g4 = Graphe(m4, s4)
+
+    print(g4.ordre_parcours)
+
+    f4 = g4.solution_gloutonne()
+
+    print(f4)
+
+    g4.test_solution_valide()

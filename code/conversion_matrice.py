@@ -1,14 +1,5 @@
 import numpy as np
 
-m = np.array([
-    [3, 1, 0, 3],
-    [1, 6, 2, 0],
-    [0, 2, 0, 4],
-    [3, 0, 4, 0],
-])
-
-d = [2, 4, 1, 1]
-
 def eclater_matrice(m, d, nsommet):
     demande_sommet = d[nsommet]
     contrainte_sommet = m[nsommet][nsommet]
@@ -49,18 +40,13 @@ def sommets_a_etendre(m, d):
     
     return None
 
-print(m)
-print(d)
+def convertir_matrice(m, d):
+    while True:
+        sommet_a_etendre = sommets_a_etendre(m, d)
 
-print("===================================================")
-
-while True:
-    sommet_a_etendre = sommets_a_etendre(m, d)
-
-    if sommet_a_etendre is not None:
-        m = eclater_matrice(m, d, sommet_a_etendre)
-    else:
-        break
-
-print(m)
-print(d)
+        if sommet_a_etendre is not None:
+            m = eclater_matrice(m, d, sommet_a_etendre)
+        else:
+            break
+    
+    return m

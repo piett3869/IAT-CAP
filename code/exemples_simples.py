@@ -3,6 +3,7 @@ import sys
 from conversion_matrice import convertir_matrice
 from functools import wraps
 from time import time
+import sys
 
 def timing(f):
     """
@@ -88,9 +89,11 @@ class Graphe():
         for neighbor, val in enumerate(self.m[node]):
             freq_neighbor = int(self.frequences_attribuees[neighbor])
             if val != 0 and freq_neighbor != 0:
-                frequences_impossibles = frequences_impossibles.union(range(int(freq_neighbor - val), int(freq_neighbor + val) + 1))
+                frequences_impossibles = frequences_impossibles.union(range(int(freq_neighbor - val + 1), int(freq_neighbor + val - 1) + 1))
+        solutions = list(frequences_possibles - frequences_impossibles)
+        solutions.sort()
 
-        return list(frequences_possibles - frequences_impossibles)
+        return solutions
 
     def calculer_frequences_possibles(self, node, span_max) -> list:
         """Version 1 de la méthode, en n'utilisant pas de sets
@@ -149,7 +152,7 @@ class Graphe():
         
         return self.frequences_attribuees
 
-    def solution_retour_sur_trace(self, span_max):
+    def solution_retour_sur_trace(self):
         """Résout le problème d'attribution des fréquences en utilisant un retour sur trace
 
         Args:
@@ -165,8 +168,7 @@ class Graphe():
         print("Le span max est : %d" % self.span_glouton)
 
         self.frequences_attribuees = [0]*len(self.d)
-
-        retval = self._solution_retour_sur_trace(node_index=self.ordre_parcours[0], span_max=span_max)
+        retval = self._solution_retour_sur_trace(node_index=0, span_max=self.span_glouton)
 
         if retval:
             return self.frequences_attribuees
@@ -201,8 +203,8 @@ class Graphe():
             print("Attribution de la fréquence %d au noeud %d" % (frequence, node))
             if self._solution_retour_sur_trace(node_index + 1, span_max):
                 return True
-            
-        self.frequences_attribuees[node_index] = 0
+            self.frequences_attribuees[node_index] = 0
+
         return False
 
     def span(self):
@@ -275,7 +277,6 @@ def charger_jeu_donnees(liste_m, liste_dem):
     return matrices, demandes
 
 if __name__ == '__main__':
-    """
     # Charger le jeu de données demandé dans le sujet
 
     matrices, demandes = charger_jeu_donnees(["m1.txt", "m2.txt", "m3.txt"], "dem.txt")
@@ -294,6 +295,7 @@ if __name__ == '__main__':
 
     sys.setrecursionlimit(10**6)
 
+    """
     for l, m in couples:
         print("Traitement du problème L%d,M%d :" % (l+1, m+1))
 
@@ -302,10 +304,20 @@ if __name__ == '__main__':
         span = graphe.span()
         graphe.test_solution_valide()
 
-        print("\tSpan: %d" % span) """
+        print("\tSpan: %d" % span)
+    """
+
+    l, m = 0, 0
+
+    print("Traitement du problème L%d,M%d :" % (l+1, m+1))
+    graphe = Graphe(matrices[m], demandes[l])
+    frequences = graphe.solution_retour_sur_trace()
+    span = graphe.span()
+    graphe.test_solution_valide()
+    print("Span glouton : %d, span backtrace : %d" % (graphe.span_glouton, span))
 
     # Matrice simple de l'exemple 3
-    
+    """
     m3 = np.array([
         [2, 1, 0, 0, 1],
         [1, 2, 1, 0, 0],
@@ -318,8 +330,11 @@ if __name__ == '__main__':
 
     g3 = Graphe(m3, s3)
 
-    f3_b = g3.solution_retour_sur_trace(span_max=9)
+    f3_b = g3.solution_retour_sur_trace()
     print(f3_b)
+    span3 = g3.span()
+    print("Span du graphe: %d" % span3)
+    """
 
     """
     m4 = np.array([

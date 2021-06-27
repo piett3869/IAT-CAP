@@ -150,8 +150,9 @@ class Graphe():
                 self.frequences_attribuees[current_node] = freq
 
         
-        return self.frequences_attribuees
+        return self.span()
 
+    @timing
     def solution_retour_sur_trace(self):
         """Résout le problème d'attribution des fréquences en utilisant un retour sur trace
 
@@ -161,20 +162,33 @@ class Graphe():
         Returns:
             list or False: Liste des fréquences attribuées au noeud. Faux si pas de solution trouvée
         """
+        span_before = 0
+        freqs_before = []
+
         self.frequences_attribuees = [0]*len(self.d)
         self.solution_gloutonne()
         self.span_glouton = self.span()
 
-        print("Le span max est : %d" % self.span_glouton)
+        while True:
+            freqs_before = self.frequences_attribuees[:]
+            span_before = self.span()
 
-        self.frequences_attribuees = [0]*len(self.d)
-        retval = self._solution_retour_sur_trace(node_index=0, span_max=self.span_glouton)
+            self.frequences_attribuees = [0]*len(self.d)
+            retval = self._solution_retour_sur_trace(node_index=0, span_max=span_before - 1)
 
-        if retval:
-            return self.frequences_attribuees
-        else:
-            print("Pas de solution trouvée")
-            return False
+
+            if retval:
+                #print("Span before: %d, our span: %d" % (span_before, self.span()))
+                if span_before == self.span():
+                    #print("Meilleure version")
+                    return self.span()
+                else:
+                    #print("Nouvelle itération")
+                    span_before = self.span()
+            else:
+                #print("Pas de solution trouvée")
+                self.frequences_attribuees = freqs_before[:]
+                return self.span()
     
     def _solution_retour_sur_trace(self, node_index, span_max):
         """Méthode cachée appelée par la fonction du dessus, qui implémente la vraie logique du retour sur trace
@@ -188,19 +202,18 @@ class Graphe():
         """
 
         if node_index == len(self.d):
-            print("Fin de parcours")
+            #print("Fin de parcours")
             return self.test_solution_valide()
         
         node = self.ordre_parcours[node_index]
         
-        print("(%02d/%02d) Traitement du noeud %d" % (node_index, len(self.d),  node))
+        #print("(%02d/%02d) Traitement du noeud %d" % (node_index, len(self.d),  node))
 
         frequences_possibles = self.calculer_frequences_possibles_set(node, span_max)
-        print("Fréquences possibles : ", frequences_possibles)
 
         for frequence in frequences_possibles:
             self.frequences_attribuees[node] = frequence
-            print("Attribution de la fréquence %d au noeud %d" % (frequence, node))
+            #print("Attribution de la fréquence %d au noeud %d" % (frequence, node))
             if self._solution_retour_sur_trace(node_index + 1, span_max):
                 return True
             self.frequences_attribuees[node_index] = 0
@@ -213,7 +226,6 @@ class Graphe():
         Returns:
             int: Le span du graphe
         """
-        print(self.frequences_attribuees)
         return int(max(self.frequences_attribuees))
 
     def solution_gloutonne_naive(self) -> list:
@@ -226,11 +238,11 @@ class Graphe():
         self.sommets_visites.append(premier_sommet)
 
         for arrete in self.a:
-            print(f"Parcours de l'arrête ({arrete[0]}, {arrete[1]}): {arrete[2]}")
+            #print(f"Parcours de l'arrête ({arrete[0]}, {arrete[1]}): {arrete[2]}")
             sommet_a, sommet_b, valeur = arrete
 
             if sommet_b in self.sommets_visites:
-                print("Arrête déjà traitée. Vérification")
+                #print("Arrête déjà traitée. Vérification")
                 if abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b]) >= valeur:
                     continue
 
@@ -240,9 +252,9 @@ class Graphe():
             self.frequences_attribuees[sommet_b] = 1 if freq_inf > 0 else freq_sup
 
             self.sommets_visites.append(sommet_b)
-            print(f"Attribution de la fréquence {self.frequences_attribuees[sommet_a] + valeur} au sommet {sommet_b}")
+            #print(f"Attribution de la fréquence {self.frequences_attribuees[sommet_a] + valeur} au sommet {sommet_b}")
 
-        return self.frequences_attribuees
+        return self.span()
 
     def test_solution_valide(self):
         """Teste si la solution trouvée respecte bien toutes les contraintes
@@ -252,10 +264,10 @@ class Graphe():
         """ 
         for sommet_a, sommet_b, valeur in self.a:
             if abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b]) < valeur:
-                print(f"SOLUTION INVALIDE : ({sommet_a}, {sommet_b}) devrait être au minimum {valeur} mais est {abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b])}")
+                #print(f"SOLUTION INVALIDE : ({sommet_a}, {sommet_b}) devrait être au minimum {valeur} mais est {abs(self.frequences_attribuees[sommet_a] - self.frequences_attribuees[sommet_b])}")
                 return False
         
-        print("SOLUTION VALIDE")
+        #print("SOLUTION VALIDE")
         return True
 
 def charger_jeu_donnees(liste_m, liste_dem):
@@ -306,6 +318,7 @@ if __name__ == '__main__':
 
         print("\tSpan: %d" % span)
     """
+    
 
     l, m = 0, 0
 
@@ -316,8 +329,8 @@ if __name__ == '__main__':
     graphe.test_solution_valide()
     print("Span glouton : %d, span backtrace : %d" % (graphe.span_glouton, span))
 
-    # Matrice simple de l'exemple 3
     """
+    # Matrice simple de l'exemple 3
     m3 = np.array([
         [2, 1, 0, 0, 1],
         [1, 2, 1, 0, 0],
@@ -327,32 +340,7 @@ if __name__ == '__main__':
     ])
 
     s3 = [2, 2, 2, 2, 2]
-
     g3 = Graphe(m3, s3)
-
-    f3_b = g3.solution_retour_sur_trace()
-    print(f3_b)
-    span3 = g3.span()
+    span3 = g3.solution_retour_sur_trace()
     print("Span du graphe: %d" % span3)
-    """
-
-    """
-    m4 = np.array([
-        [0, 3, 0, 2, 0, 0, 0, 10],
-        [3, 0, 1, 2, 0, 0, 0, 0],
-        [0, 1, 3, 4, 0, 0, 0, 0],
-        [2, 2, 4, 0, 8, 4, 6, 5],
-        [0, 0, 0, 8, 1, 3, 0, 0],
-        [0, 0, 0, 4, 3, 0, 1, 0],
-        [0, 0, 0, 6, 0, 1, 2, 8],
-        [10, 0, 0, 5, 0, 0, 8, 0],
-    ], dtype=np.int16)
-    s4 = [1, 1, 3, 1, 2, 1, 5, 1]
-    g4 = Graphe(m4, s4)
-
-    f4 = g4.solution_retour_sur_trace()
-    span4 = g4.span()
-    print(f4)
-    print("Span du graphe: %d" % span4)
-    g4.test_solution_valide()
     """

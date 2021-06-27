@@ -165,11 +165,14 @@ class Graphe():
         span_before = 0
         freqs_before = []
 
+        iteration = 1
+
         self.frequences_attribuees = [0]*len(self.d)
         self.solution_gloutonne()
         self.span_glouton = self.span()
 
         while True:
+            print("Itération #%d" % iteration)
             freqs_before = self.frequences_attribuees[:]
             span_before = self.span()
 
@@ -189,6 +192,8 @@ class Graphe():
                 #print("Pas de solution trouvée")
                 self.frequences_attribuees = freqs_before[:]
                 return self.span()
+            
+            iteration += 1
     
     def _solution_retour_sur_trace(self, node_index, span_max):
         """Méthode cachée appelée par la fonction du dessus, qui implémente la vraie logique du retour sur trace
